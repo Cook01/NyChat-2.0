@@ -9,7 +9,7 @@ public class ChatServerMain{
    
 
    	public ChatServerMain(int port){
-   		clientList = new ArrayList<Thread>();
+   		clientList = new ArrayList<Socket>();
 
    		try{
    			System.out.println("Creation du sever sur le port " + port);
@@ -18,29 +18,27 @@ public class ChatServerMain{
 			do{
 				System.out.println("Attente de client ...");
 				Socket socket = server.accept();
+				System.out.println(socket);
 
 				int idClient = clientList.size();
 				clientList.add(socket);
 
 				System.out.println("Creation du Thread");
-				Thread client = new Thread(new ChatServerThread(socket, id, this));
+				Thread client = new Thread(new ChatServerThread(socket, idClient, this));
 
 				System.out.println("Demarage du Thread");
 				client.start();
 
 				Thread.sleep(1000);
 
-				
-
-			} while(clientList.size() > 0);
-
+			} while(true);
 
 		} catch(Exception e) {
 			System.out.println(e); 
 		}
 	}
 
-	public ArrayList<Thread> getClientList(){
+	public ArrayList<Socket> getClientList(){
 		return this.clientList;
 	}
 	

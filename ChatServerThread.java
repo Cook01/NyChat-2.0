@@ -17,7 +17,7 @@ public class ChatServerThread implements Runnable{
 		try{
 			open();
 		}catch(Exception e){
-			System.out.println(e);
+			e.printStackTrace();
 		}
 	}
 
@@ -29,15 +29,15 @@ public class ChatServerThread implements Runnable{
 				String line = streamIn.readUTF();
 				System.out.println(line);
 				done = line.equals("/quit");
-			} catch(IOException ioe) {
-				System.out.println(ioe);
+			} catch(Exception e) {
+				e.printStackTrace();
 				done = true;
 			}
 
 			try{
 				close();
 			}catch(Exception e){
-				System.out.println(e);
+				e.printStackTrace();
 			}
 		}
 	}
