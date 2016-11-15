@@ -5,12 +5,14 @@ import java.lang.*;
 
 public class ChatServerMain{
 	private ArrayList<Socket> clientList;
+	private ArrayList<PrintWriter> writerList;
    	private ServerSocket server;
 
    	private PrintWriter out;
 
    	public ChatServerMain(int port){
    		clientList = new ArrayList<Socket>();
+   		writerList = new ArrayList<PrintWriter>();
 
    		try{
    			System.out.println("Creation du sever sur le port " + port);
@@ -18,19 +20,16 @@ public class ChatServerMain{
 
 			do{
 				System.out.println("Attente de client ...");
-				Socket socket = server.accept();
-				System.out.println(socket);
+				Socket client = server.accept();
+				System.out.println(client);
 
-				int idClient = clientList.size();
-				clientList.add(socket);
+				int idClient = open(client);
 
 				System.out.println("Creation du Thread");
-				Thread client = new Thread(new ChatServerThread(socket, idClient, this));
+				Thread clientThread = new Thread(new ChatServerThread(client, idClient, this));
 
 				System.out.println("Demarage du Thread");
-				client.start();
-
-				Thread.sleep(1000);
+				clientThread.start();
 
 			} while(true);
 
@@ -38,12 +37,31 @@ public class ChatServerMain{
 			System.out.println(e); 
 		}
 	}
+
+	public int open(Socket client){
+		try{
+			int idClient = clientList.size();
+			clientList.add(client);
+
+			PrintWriter out = new PrintWriter(client.getOutputStream());
+			writerList.add(out);
+
+			return idClient;
+		}catch(Exception e){
+			e.printStackTrace();
+			return -1;
+		}
+		
+	}
 	
 	public void closeId(int id){
 		try{
 			System.out.println("Client close : " + clientList.get(id));
 			clientList.get(id).close();
 			clientList.remove(id);
+
+			writerList.get(id).close();
+			writerList.remove(id);
 		} catch(Exception e){
 			e.printStackTrace();
 		}
@@ -51,17 +69,9 @@ public class ChatServerMain{
 	}
 
 	public void write(String line){
-		for(Socket client : clientList){
-			try{
-				out = new PrintWriter(client.getOutputStream());
-
-				out.println(line);
-				out.flush();
-
-				out.close();
-			} catch(Exception e){
-				e.printStackTrace();
-			}
+		for(PrintWriter out : writerList){
+			out.println(line);
+			out.flush();
 		}	
 	}
 
