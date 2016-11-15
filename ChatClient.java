@@ -1,5 +1,6 @@
 import java.net.*;
 import java.io.*;
+import java.util.*;
 
 public class ChatClient implements Runnable 
 {
@@ -9,33 +10,25 @@ public class ChatClient implements Runnable
 	private Boolean lecture				= false;
 	private Socket socket 				= null;
 	private DataInputStream console		= null;
-	private DataOutputStream streamOut 	= null;
-	private	DataInputStream streamIn	= null;
+	private PrintWriter streamOut 		= null;
+	private	Scanner streamIn			= null;
 
-	private ChatClient(String serverName, int serverPort, Boolean lecture)
+	private ChatClient(String serverName, int serverPort, Boolean lecture, Socket socket)
 	{
 		if(!lecture) System.out.println("Connexion au serveur...");
 
-		try {
-
-			socket = new Socket(serverName, serverPort);
-			if(!lecture) System.out.println("Connecté : " + socket);
 
 
-			console			= new DataInputStream(System.in);
-			streamOut		= new DataOutputStream(socket.getOutputStream());
+		this.socket = socket;
+		if(!lecture) System.out.println("Connecté : " + this.socket);
 
-			this.lecture	= lecture;
 
-		} catch(UnknownHostException uhe) {
+		console			= new DataInputStream(System.in);
+		
 
-			if(!lecture) System.out.println("Serveur inconnu : " + uhe.getMessage());
+		this.lecture	= lecture;
 
-		} catch (IOException ioe) {
 
-			if(!lecture) System.out.println("Erreur inconnue : " + ioe.getMessage());
-
-		}
 
 	}
 
@@ -50,27 +43,26 @@ public class ChatClient implements Runnable
 
 			try {
 
-				streamIn = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+				streamIn = new Scanner(this.socket.getInputStream());
 			} catch(IOException ioe) {
 
 				System.out.println("Erreur serveur : " + ioe.getMessage());
 
-				return;
+				ChatClient.done = true;
 
 			}
 
-			while(!ChatClient.done) {
+			while(!ChatClient.done ) {
 
-				try {
 
-					line = streamIn.readUTF();
-					System.out.println("message recu : " + line);
 
-				} catch(IOException ioe) {
+					if(streamIn.hasNext()) {
+						line = streamIn.nextLine();
+					System.out.println("other	: " + line);
+					}
+					
 
-					System.out.println("Erreur serveur : " + ioe.getMessage());
-
-				}
+				
 
 			}
 
@@ -82,13 +74,19 @@ public class ChatClient implements Runnable
 
 				try {
 
+					streamOut		= new PrintWriter(this.socket.getOutputStream());
+
+
 					line = console.readLine();
-					streamOut.writeUTF(line);
+
+					streamOut.println(line);
 					streamOut.flush();
 
 				} catch(IOException ioe) {
 
-					System.out.println("Erreur serveur : " + ioe.getMessage());
+					System.out.println("Erreur serveur (read) : " + ioe.getMessage());
+
+					ChatClient.done = true; 
 
 				}
 
@@ -116,6 +114,7 @@ public class ChatClient implements Runnable
 		} catch (IOException ioe) {
 
 			System.out.println("Erreur lors de la fermeture du serveur");
+			ChatClient.done = true;
 
 		}
 	}
@@ -129,11 +128,28 @@ public class ChatClient implements Runnable
          	System.out.println("Usage: java ChatClient host port");
       	else {
 
-          	Thread ecriture = new Thread( new ChatClient(args[0], Integer.parseInt(args[1]), false) );
-          	Thread lecture  = new Thread( new ChatClient(args[0], Integer.parseInt(args[1]), true) );
 
-    		ecriture.start();
-    		lecture.start();
+			try {
+
+				Socket socket = new Socket(args[0], Integer.parseInt(args[1]));
+
+	          	Thread ecriture = new Thread( new ChatClient(args[0], Integer.parseInt(args[1]), false, socket) );
+	          	Thread lecture  = new Thread( new ChatClient(args[0], Integer.parseInt(args[1]), true, socket) );
+
+	    		ecriture.start();
+	    		lecture.start();
+
+	    	} catch(UnknownHostException uhe) {
+
+				System.out.println("Serveur inconnu : " + uhe.getMessage());
+				ChatClient.done = true;
+
+			} catch (IOException ioe) {
+
+				System.out.println("Erreur inconnue : " + ioe.getMessage());
+				ChatClient.done = true;
+
+			}
 
       	}
          	
