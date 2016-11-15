@@ -24,7 +24,7 @@ public class ChatServerMain{
 				clientList.add(socket);
 
 				System.out.println("Creation du Thread");
-				Thread client = new Thread(new ChatServerThread(socket, idClient, this));
+				Thread client = new Thread(new ChatServerReadingThread(socket, idClient, this));
 
 				System.out.println("Demarage du Thread");
 				client.start();
@@ -37,11 +37,18 @@ public class ChatServerMain{
 			System.out.println(e); 
 		}
 	}
-
-	public ArrayList<Socket> getClientList(){
-		return this.clientList;
-	}
 	
+	public void closeId(int id){
+		try{
+			System.out.println("Client close : " + clientList.get(id));
+			clientList.get(id).close();
+			clientList.remove(id);
+		} catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+
 	public static void main(String args[]){
 		ChatServerMain server = null;
 
