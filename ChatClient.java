@@ -10,8 +10,8 @@ public class ChatClient implements Runnable
 	private Boolean lecture				= false;
 	private Socket socket 				= null;
 	private DataInputStream console		= null;
-	private PrintWriter streamOut 	= null;
-	private	Scanner streamIn	= null;
+	private PrintWriter streamOut 		= null;
+	private	Scanner streamIn			= null;
 
 	private ChatClient(String serverName, int serverPort, Boolean lecture, Socket socket)
 	{
@@ -58,7 +58,7 @@ public class ChatClient implements Runnable
 
 					if(streamIn.hasNext()) {
 						line = streamIn.nextLine();
-					System.out.println("message recu : " + line);
+					System.out.println("other	: " + line);
 					}
 					
 
@@ -78,8 +78,6 @@ public class ChatClient implements Runnable
 
 
 					line = console.readLine();
-
-					System.out.println("(test)" + line);
 
 					streamOut.println(line);
 					streamOut.flush();
