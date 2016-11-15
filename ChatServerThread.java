@@ -4,11 +4,12 @@ import java.util.*;
 import java.lang.*;
 
 public class ChatServerThread implements Runnable{
-	private Socket client = null;
-	private DataInputStream streamIn =  null;
-	private ChatServerMain server = null;
 	private int id;
 
+	private Socket client = null;
+	private ChatServerMain server = null;
+
+	private Scanner in;
 
 	public ChatServerThread(Socket client, int id, ChatServerMain server){
 		this.server = server;
@@ -25,34 +26,34 @@ public class ChatServerThread implements Runnable{
 	public void run(){
 		boolean done = false;
 		while(!done){
-			try{
-				String line = streamIn.readUTF();
-				System.out.println(line);
-				done = line.equals("/quit");
-			} catch(Exception e) {
-				e.printStackTrace();
-				done = true;
-			}
+			if(in.hasNext()){
+				String line = in.nextLine();
 
-			try{
-				close();
-			}catch(Exception e){
-				e.printStackTrace();
+				line = client.toString() + " : " + line;
+				System.out.println(line);
+
+				server.write(line);
+
+				done = line.equals("/quit");
 			}
+		}
+		try{
+			close();
+		}catch(Exception e){
+			e.printStackTrace();
 		}
 	}
 
 	public void open() throws IOException{
-		streamIn = new DataInputStream(new BufferedInputStream(client.getInputStream()));
+		in = new Scanner(client.getInputStream());
 	}
 
 	public void close() throws IOException{
-		if (client != null)
-			client.close();
+		server.closeId(id);
 
-		server.getClientList().remove(this);
-
-		if (streamIn != null)
-			streamIn.close();
+		if (in != null){
+			in.close();
+		}
 	}
+
 }

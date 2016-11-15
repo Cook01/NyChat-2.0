@@ -6,7 +6,8 @@ import java.lang.*;
 public class ChatServerMain{
 	private ArrayList<Socket> clientList;
    	private ServerSocket server;
-   
+
+   	private PrintWriter out;
 
    	public ChatServerMain(int port){
    		clientList = new ArrayList<Socket>();
@@ -24,7 +25,7 @@ public class ChatServerMain{
 				clientList.add(socket);
 
 				System.out.println("Creation du Thread");
-				Thread client = new Thread(new ChatServerReadingThread(socket, idClient, this));
+				Thread client = new Thread(new ChatServerThread(socket, idClient, this));
 
 				System.out.println("Demarage du Thread");
 				client.start();
@@ -47,6 +48,21 @@ public class ChatServerMain{
 			e.printStackTrace();
 		}
 		
+	}
+
+	public void write(String line){
+		for(Socket client : clientList){
+			try{
+				out = new PrintWriter(client.getOutputStream());
+
+				out.println(line);
+				out.flush();
+
+				out.close();
+			} catch(Exception e){
+				e.printStackTrace();
+			}
+		}	
 	}
 
 	public static void main(String args[]){
